@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import tensorflow as tf
 import numpy as np
@@ -236,7 +237,19 @@ CLASS_NAMES = list(CLINICAL_DATABASE.keys())
 
 @st.cache_resource
 def load_classification_model():
-    return tf.keras.models.load_model("EfficientNetB0_best.keras")
+    model_filename = "EfficientNetB0_best.keras"
+    part_files = ["model_part1.bin", "model_part2.bin"]
+    
+    if not os.path.exists(model_filename):
+        with open(model_filename, "wb") as output_stream:
+            for part in part_files:
+                if os.path.exists(part):
+                    with open(part, "rb") as input_stream:
+                        output_stream.write(input_stream.read())
+                else:
+                    raise FileNotFoundError(f"Missing model chunk: {part}")
+                    
+    return tf.keras.models.load_model(model_filename)
 
 st.markdown("""
 <div class="clinical-header">
